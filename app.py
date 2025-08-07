@@ -3,14 +3,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Apply dark theme to seaborn/matplotlib
+# Set dark theme
 plt.style.use("dark_background")
 sns.set_theme(style="darkgrid")
 
-# Page Config
+# Streamlit page config
 st.set_page_config(page_title="Titanic EDA Dashboard", layout="wide")
 
-# Custom CSS for dark background and white text
+# Dark background CSS
 st.markdown("""
     <style>
         .main {
@@ -19,9 +19,6 @@ st.markdown("""
         }
         .block-container {
             padding-top: 2rem;
-        }
-        .st-bx {
-            background-color: #222222 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -35,24 +32,20 @@ df = pd.read_csv("cleaned_titanic.csv")
 # Sidebar Filters
 st.sidebar.header("🎚️ Filter Options")
 
-# Gender filter
 gender_options = df["Sex"].dropna().unique()
 gender = st.sidebar.multiselect("Select Gender", options=gender_options, default=gender_options)
 
-# Pclass filter
 pclass_options = sorted(df["Pclass"].dropna().unique())
 pclass = st.sidebar.multiselect("Select Passenger Class", options=pclass_options, default=pclass_options)
 
-# Embarked filter
 embarked_options = df["Embarked"].dropna().unique()
 embarked = st.sidebar.multiselect("Select Embarked Location", options=embarked_options, default=embarked_options)
 
-# Age slider
 min_age = int(df["Age"].min())
 max_age = int(df["Age"].max())
 age_range = st.sidebar.slider("Select Age Range", min_value=min_age, max_value=max_age, value=(min_age, max_age))
 
-# Apply all filters
+# Apply filters
 filtered_df = df[
     (df["Sex"].isin(gender)) &
     (df["Pclass"].isin(pclass)) &
@@ -60,61 +53,65 @@ filtered_df = df[
     (df["Age"].between(age_range[0], age_range[1]))
 ]
 
-# Raw data toggle
+# Show data
 if st.checkbox("📂 Show Filtered Raw Data"):
     st.dataframe(filtered_df)
 
-# Data preview
 st.subheader("📌 Filtered Data Preview")
 st.write(filtered_df.head())
 
-# ROW 1 — 3 Charts
-col1, col2, col3 = st.columns(3)
+# ============ ROW 1 ============ #
+st.markdown("### 🔍 Visual Analysis (Row 1)")
+row1_col1, row1_col2, row1_col3 = st.columns([1, 1, 1])
 
-with col1:
-    st.markdown("### 🧍‍♂️ Survival Count by Gender")
-    fig1, ax1 = plt.subplots()
-    sns.countplot(data=filtered_df, x="Survived", hue="Sex", ax=ax1)
-    ax1.set_xticklabels(["Not Survived", "Survived"])
-    st.pyplot(fig1)
+with row1_col1:
+    st.markdown("#### 🧍‍♂️ Survival Count by Gender")
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.countplot(data=filtered_df, x="Survived", hue="Sex", ax=ax)
+    ax.set_xticklabels(["Not Survived", "Survived"])
+    ax.set_ylabel("Count")
+    st.pyplot(fig)
 
-with col2:
-    st.markdown("### 📊 Age Distribution")
-    fig2, ax2 = plt.subplots()
-    sns.histplot(data=filtered_df, x="Age", bins=30, kde=True, ax=ax2)
-    st.pyplot(fig2)
+with row1_col2:
+    st.markdown("#### 📊 Age Distribution")
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.histplot(data=filtered_df, x="Age", bins=30, kde=True, ax=ax)
+    ax.set_ylabel("Frequency")
+    st.pyplot(fig)
 
-with col3:
-    st.markdown("### 🎓 Survival Rate by Class")
-    fig3, ax3 = plt.subplots()
-    sns.barplot(data=filtered_df, x="Pclass", y="Survived", hue="Sex", ax=ax3)
-    st.pyplot(fig3)
+with row1_col3:
+    st.markdown("#### 🎓 Survival Rate by Class")
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.barplot(data=filtered_df, x="Pclass", y="Survived", hue="Sex", ax=ax)
+    ax.set_ylabel("Survival Rate")
+    st.pyplot(fig)
 
-# ROW 2 — 3 More Charts
-col4, col5, col6 = st.columns(3)
+# ============ ROW 2 ============ #
+st.markdown("### 📈 Visual Analysis (Row 2)")
+row2_col1, row2_col2, row2_col3 = st.columns([1, 1, 1])
 
-with col4:
-    st.markdown("### 💰 Fare Distribution by Class")
-    fig4, ax4 = plt.subplots()
-    sns.boxplot(data=filtered_df, x="Pclass", y="Fare", ax=ax4)
-    st.pyplot(fig4)
+with row2_col1:
+    st.markdown("#### 💰 Fare Distribution by Class")
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.boxplot(data=filtered_df, x="Pclass", y="Fare", ax=ax)
+    st.pyplot(fig)
 
-with col5:
-    st.markdown("### 🧠 Correlation Heatmap")
+with row2_col2:
+    st.markdown("#### 🧠 Correlation Heatmap")
     numeric_df = filtered_df.select_dtypes(include=['float64', 'int64'])
     if not numeric_df.empty:
-        fig5, ax5 = plt.subplots()
-        sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax5)
-        st.pyplot(fig5)
+        fig, ax = plt.subplots(figsize=(5, 4))
+        sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
+        st.pyplot(fig)
     else:
-        st.warning("No numeric data to display correlation heatmap.")
+        st.warning("No numeric data available to show correlation heatmap.")
 
-with col6:
-    st.markdown("### 🚉 Embarked Passenger Count")
-    fig6, ax6 = plt.subplots()
-    sns.countplot(data=filtered_df, x="Embarked", hue="Sex", ax=ax6)
-    ax6.set_title("Passengers by Embarked Location")
-    st.pyplot(fig6)
+with row2_col3:
+    st.markdown("#### 🚉 Embarked Passenger Count")
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.countplot(data=filtered_df, x="Embarked", hue="Sex", ax=ax)
+    ax.set_title("Embarked Location vs Gender")
+    st.pyplot(fig)
 
 # Footer
 st.markdown("---")

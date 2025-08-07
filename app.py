@@ -2,57 +2,55 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import base64
 
-# Set dark theme for visuals
+# Load background image and convert to base64
+def set_background(image_file):
+    with open(image_file, "rb") as image:
+        encoded = base64.b64encode(image.read()).decode()
+    css = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpg;base64,{encoded}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-position: center;
+    }}
+    .block-container {{
+        background-color: rgba(0, 0, 0, 0.75);  /* Dark overlay to improve readability */
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        border-radius: 10px;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+# Call background function
+set_background("pic.jpg")
+
+# Set dark theme for charts
 plt.style.use("dark_background")
 sns.set_theme(style="darkgrid")
 
 # Streamlit config
 st.set_page_config(page_title="Titanic EDA Dashboard", layout="wide")
 
-# Custom dark CSS for full background
-st.markdown("""
-    <style>
-        .main {
-            background-color: #111111;
-            color: white;
-        }
-        .block-container {
-            padding-top: 2rem;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 # Title
 st.title("🚢 Titanic Data Analytics Dashboard")
 
-# Load Data
+# Load Titanic Data
 df = pd.read_csv("cleaned_titanic.csv")
 
 # Sidebar Filters
 st.sidebar.header("🎚️ Filter Options")
 
-# Gender Filter
-gender_options = df["Sex"].dropna().unique()
-gender = st.sidebar.multiselect("Select Gender", options=gender_options, default=gender_options)
-
-# Passenger Class Filter
-pclass_options = sorted(df["Pclass"].dropna().unique())
-pclass = st.sidebar.multiselect("Select Passenger Class", options=pclass_options, default=pclass_options)
-
-# Embarked Location Filter
-embarked_options = df["Embarked"].dropna().unique()
-embarked = st.sidebar.multiselect("Select Embarked Location", options=embarked_options, default=embarked_options)
-
-# Age Range Filter
-min_age = int(df["Age"].min())
-max_age = int(df["Age"].max())
-age_range = st.sidebar.slider("Select Age Range", min_value=min_age, max_value=max_age, value=(min_age, max_age))
-
-# Fare Range Filter
-min_fare = float(df["Fare"].min())
-max_fare = float(df["Fare"].max())
-fare_range = st.sidebar.slider("Select Fare Range", min_value=float(min_fare), max_value=float(max_fare), value=(min_fare, max_fare))
+gender = st.sidebar.multiselect("Select Gender", options=df["Sex"].dropna().unique(), default=df["Sex"].dropna().unique())
+pclass = st.sidebar.multiselect("Select Passenger Class", options=sorted(df["Pclass"].dropna().unique()), default=sorted(df["Pclass"].dropna().unique()))
+embarked = st.sidebar.multiselect("Select Embarked Location", options=df["Embarked"].dropna().unique(), default=df["Embarked"].dropna().unique())
+age_range = st.sidebar.slider("Select Age Range", int(df["Age"].min()), int(df["Age"].max()), (int(df["Age"].min()), int(df["Age"].max())))
+fare_range = st.sidebar.slider("Select Fare Range", float(df["Fare"].min()), float(df["Fare"].max()), (float(df["Fare"].min()), float(df["Fare"].max())))
 
 # Apply Filters
 filtered_df = df[
@@ -63,43 +61,39 @@ filtered_df = df[
     (df["Fare"].between(fare_range[0], fare_range[1]))
 ]
 
-# Show filtered raw data if checkbox selected
+# Optional Data Display
 if st.checkbox("📂 Show Filtered Raw Data"):
     st.dataframe(filtered_df)
 
-# Preview filtered data
 st.subheader("📌 Filtered Data Preview")
 st.write(filtered_df.head())
 
-# ROW 1 – First 3 Charts
+# Row 1
 st.markdown("### 📊 Visual Analysis (Row 1)")
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("#### 🧍‍♂️ Survival Count by Gender")
     fig, ax = plt.subplots(figsize=(5, 4))
     sns.countplot(data=filtered_df, x="Survived", hue="Sex", ax=ax)
     ax.set_xticklabels(["Not Survived", "Survived"])
-    ax.set_ylabel("Count")
     st.pyplot(fig)
 
 with col2:
     st.markdown("#### 📊 Age Distribution")
     fig, ax = plt.subplots(figsize=(5, 4))
     sns.histplot(data=filtered_df, x="Age", bins=30, kde=True, ax=ax)
-    ax.set_ylabel("Frequency")
     st.pyplot(fig)
 
 with col3:
     st.markdown("#### 🎓 Survival Rate by Class")
     fig, ax = plt.subplots(figsize=(5, 4))
     sns.barplot(data=filtered_df, x="Pclass", y="Survived", hue="Sex", ax=ax)
-    ax.set_ylabel("Survival Rate")
     st.pyplot(fig)
 
-# ROW 2 – Next 3 Charts
+# Row 2
 st.markdown("### 📈 Visual Analysis (Row 2)")
-col4, col5, col6 = st.columns([1, 1, 1])
+col4, col5, col6 = st.columns(3)
 
 with col4:
     st.markdown("#### 💰 Fare Distribution by Class")
@@ -115,13 +109,12 @@ with col5:
         sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
         st.pyplot(fig)
     else:
-        st.warning("No numeric data to display correlation heatmap.")
+        st.warning("No numeric data available to show correlation heatmap.")
 
 with col6:
     st.markdown("#### 🚉 Embarked Passenger Count")
     fig, ax = plt.subplots(figsize=(5, 4))
     sns.countplot(data=filtered_df, x="Embarked", hue="Sex", ax=ax)
-    ax.set_title("Embarked Location vs Gender")
     st.pyplot(fig)
 
 # Footer

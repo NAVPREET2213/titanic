@@ -119,4 +119,5 @@ with col6:
 
 # Footer
 st.markdown("---")
-st.markdown("**Made with ❤️ using Streamlit**", unsafe_allow_html=True)
+st.markdown("**Made by Navpreet Singh(72211389)**", unsafe_allow_html=True)
+

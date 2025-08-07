@@ -32,7 +32,7 @@ st.title("🚢 Titanic Data Analytics Dashboard")
 # Load Data
 df = pd.read_csv("cleaned_titanic.csv")
 
-# Show Data
+# Show Raw Data
 if st.checkbox("📂 Show Raw Data"):
     st.dataframe(df)
 
@@ -47,7 +47,7 @@ filtered_df = df[(df["Sex"] == gender) & (df["Pclass"] == pclass)]
 st.subheader("📌 Filtered Data Preview")
 st.write(filtered_df.head())
 
-# Create 3 columns for the first row of visualizations
+# ROW 1 — 3 Charts
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -69,8 +69,8 @@ with col3:
     sns.barplot(data=df, x="Pclass", y="Survived", hue="Sex", ax=ax3)
     st.pyplot(fig3)
 
-# Second row of charts
-col4, col5 = st.columns(2)
+# ROW 2 — 3 More Charts
+col4, col5, col6 = st.columns(3)
 
 with col4:
     st.markdown("### 💰 Fare Distribution by Class")
@@ -84,6 +84,13 @@ with col5:
     fig5, ax5 = plt.subplots()
     sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax5)
     st.pyplot(fig5)
+
+with col6:
+    st.markdown("### 🚉 Embarked Passenger Count")
+    fig6, ax6 = plt.subplots()
+    sns.countplot(data=df, x="Embarked", hue="Sex", ax=ax6)
+    ax6.set_title("Passengers by Embarked Location")
+    st.pyplot(fig6)
 
 # Footer
 st.markdown("---")

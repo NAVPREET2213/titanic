@@ -18,7 +18,7 @@ def set_background(image_file):
         background-position: center;
     }}
     .block-container {{
-        background-color: rgba(0, 0, 0, 0.75);  /* Dark overlay to improve readability */
+        background-color: rgba(60, 60, 60, 0.6);  /* Gray overlay for better visibility */
         padding-top: 2rem;
         padding-bottom: 2rem;
         border-radius: 10px;
@@ -119,5 +119,4 @@ with col6:
 
 # Footer
 st.markdown("---")
-st.markdown("**Made by Navpreet Singh(72211389)**", unsafe_allow_html=True)
-
+st.markdown("**Made by Navpreet Singh (72211389)**", unsafe_allow_html=True)

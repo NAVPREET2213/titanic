@@ -32,18 +32,39 @@ st.title("🚢 Titanic Data Analytics Dashboard")
 # Load Data
 df = pd.read_csv("cleaned_titanic.csv")
 
-# Show Raw Data
-if st.checkbox("📂 Show Raw Data"):
-    st.dataframe(df)
-
 # Sidebar Filters
 st.sidebar.header("🎚️ Filter Options")
-gender = st.sidebar.selectbox("Select Gender", options=df["Sex"].unique())
-pclass = st.sidebar.selectbox("Select Passenger Class", options=sorted(df["Pclass"].unique()))
 
-# Apply filters
-filtered_df = df[(df["Sex"] == gender) & (df["Pclass"] == pclass)]
+# Gender filter
+gender_options = df["Sex"].dropna().unique()
+gender = st.sidebar.multiselect("Select Gender", options=gender_options, default=gender_options)
 
+# Pclass filter
+pclass_options = sorted(df["Pclass"].dropna().unique())
+pclass = st.sidebar.multiselect("Select Passenger Class", options=pclass_options, default=pclass_options)
+
+# Embarked filter
+embarked_options = df["Embarked"].dropna().unique()
+embarked = st.sidebar.multiselect("Select Embarked Location", options=embarked_options, default=embarked_options)
+
+# Age slider
+min_age = int(df["Age"].min())
+max_age = int(df["Age"].max())
+age_range = st.sidebar.slider("Select Age Range", min_value=min_age, max_value=max_age, value=(min_age, max_age))
+
+# Apply all filters
+filtered_df = df[
+    (df["Sex"].isin(gender)) &
+    (df["Pclass"].isin(pclass)) &
+    (df["Embarked"].isin(embarked)) &
+    (df["Age"].between(age_range[0], age_range[1]))
+]
+
+# Raw data toggle
+if st.checkbox("📂 Show Filtered Raw Data"):
+    st.dataframe(filtered_df)
+
+# Data preview
 st.subheader("📌 Filtered Data Preview")
 st.write(filtered_df.head())
 
@@ -66,7 +87,7 @@ with col2:
 with col3:
     st.markdown("### 🎓 Survival Rate by Class")
     fig3, ax3 = plt.subplots()
-    sns.barplot(data=df, x="Pclass", y="Survived", hue="Sex", ax=ax3)
+    sns.barplot(data=filtered_df, x="Pclass", y="Survived", hue="Sex", ax=ax3)
     st.pyplot(fig3)
 
 # ROW 2 — 3 More Charts
@@ -75,20 +96,23 @@ col4, col5, col6 = st.columns(3)
 with col4:
     st.markdown("### 💰 Fare Distribution by Class")
     fig4, ax4 = plt.subplots()
-    sns.boxplot(data=df, x="Pclass", y="Fare", ax=ax4)
+    sns.boxplot(data=filtered_df, x="Pclass", y="Fare", ax=ax4)
     st.pyplot(fig4)
 
 with col5:
     st.markdown("### 🧠 Correlation Heatmap")
-    numeric_df = df.select_dtypes(include=['float64', 'int64'])
-    fig5, ax5 = plt.subplots()
-    sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax5)
-    st.pyplot(fig5)
+    numeric_df = filtered_df.select_dtypes(include=['float64', 'int64'])
+    if not numeric_df.empty:
+        fig5, ax5 = plt.subplots()
+        sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax5)
+        st.pyplot(fig5)
+    else:
+        st.warning("No numeric data to display correlation heatmap.")
 
 with col6:
     st.markdown("### 🚉 Embarked Passenger Count")
     fig6, ax6 = plt.subplots()
-    sns.countplot(data=df, x="Embarked", hue="Sex", ax=ax6)
+    sns.countplot(data=filtered_df, x="Embarked", hue="Sex", ax=ax6)
     ax6.set_title("Passengers by Embarked Location")
     st.pyplot(fig6)
 
